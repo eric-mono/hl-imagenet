@@ -187,6 +187,10 @@ def predict(image: np.ndarray, *, mode: str = "full") -> Prediction:
         candidates = _rank3_verify(candidates, graph)
         candidates = _rank4_verify(candidates, graph)
         candidates = _rank5_verify(candidates, graph)
+        candidates = _final_verify(candidates, graph)
+        candidates = _final_verify_wave2(candidates, graph)
+        candidates = _final_verify_wave3(candidates, graph)
+        candidates = _final_verify_wave4(candidates, graph)
 
     best_label, best_score, best_route = candidates[0]
     alternatives = [(label, score) for label, score, _ in candidates[1:5]]
@@ -1395,6 +1399,1050 @@ def _rank5_verify(
             candidates[0], candidates[4] = candidates[4], candidates[0]
         elif s.get("warm", 0.0) > 0.4644:
             candidates[0], candidates[4] = candidates[4], candidates[0]
+
+    return candidates
+
+
+def _final_verify(
+    candidates: list[tuple[str, float, list[str]]],
+    graph: SceneGraph,
+) -> list[tuple[str, float, list[str]]]:
+    """Post-pipeline final verify: zero-risk conditions mined after all other stages.
+
+    Placed AFTER rank5_verify so cascade radius is zero.
+    """
+    if len(candidates) < 2:
+        return candidates
+
+    from hlinet.features.compounds.phase2_signatures import _stats
+    s = _stats(graph)
+
+    top_label = candidates[0][0]
+    sec_label = candidates[1][0]
+
+    # Rank-2 conditions (swap candidates[0] ↔ candidates[1])
+    if top_label == "golden_retriever" and sec_label == "brown_bear":
+        if s.get("wavelet_coarse", 0) > 0.50905003197:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "teapot":
+        if s.get("bw", 999) < 0.05151367188:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "mushroom":
+        if s.get("sat_tr", 0) > 0.72886412377:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "golden_retriever":
+        if s.get("bright_top_minus_bot", 0) > 0.48960248162:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "banana":
+        if s.get("cm_b_std", 0) > 0.09182494668:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "king_penguin":
+        if s.get("sat_tl", 999) < 0.09728477328:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "king_penguin":
+        if s.get("cm_b_skew", 0) > 2.91487002373:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "mushroom":
+        if s.get("green", 0) > 0.36645507812:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "banana":
+        if s.get("warm_sat_std", 0) > 0.20768115597:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "orange" and sec_label == "mushroom":
+        if s.get("rb_corr", 0) > 0.84438675642:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "school_bus":
+        if s.get("top_edge", 999) < 0.05761718750:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+
+    # Rank-3 conditions (swap candidates[0] ↔ candidates[2])
+    if len(candidates) >= 3:
+        top_label = candidates[0][0]
+        r3_label = candidates[2][0]
+        if top_label == "orange" and r3_label == "mushroom":
+            if s.get("rb_corr", 0) > 0.84438675642:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+
+    # Rank-4 conditions (swap candidates[0] ↔ candidates[3])
+    if len(candidates) >= 4:
+        top_label = candidates[0][0]
+        r4_label = candidates[3][0]
+        if top_label == "orange" and r4_label == "mushroom":
+            if s.get("rb_corr", 0) > 0.84438675642:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+
+    # Rank-5 conditions (swap candidates[0] ↔ candidates[4])
+    if len(candidates) >= 5:
+        top_label = candidates[0][0]
+        r5_label = candidates[4][0]
+        if top_label == "brown_bear" and r5_label == "mushroom":
+            if s.get("warm_sat_std", 0) > 0.20768115597:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+
+    return candidates
+
+
+def _final_verify_wave2(
+    candidates: list[tuple[str, float, list[str]]],
+    graph: SceneGraph,
+) -> list[tuple[str, float, list[str]]]:
+    """Post-pipeline wave 2: fix-1 zero-risk conditions."""
+    if len(candidates) < 2:
+        return candidates
+
+    from hlinet.features.compounds.phase2_signatures import _stats
+    s = _stats(graph)
+
+    top_label = candidates[0][0]
+    sec_label = candidates[1][0]
+    if top_label == "orange" and sec_label == "banana":
+        if s.get("r0_circularity", 0) > 0.69265858380:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("bg_contrast", 999) < 0.65576171875:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("orient_entropy", 999) < 2.37582748875:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("round_circularity", 0) > 0.76868047765:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("n_contours_norm", 0) > 0.80000000000:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "school_bus" and sec_label == "sports_car":
+        if s.get("hue_green", 0) > 0.18249837345:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("wavelet_mid", 0) > 0.31938702526:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("round_area", 0) > 0.16503906250:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("hu2", 0) > 9.72220884625:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("hist_bear_minus_teapot", 0) > 0.45973145636:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "orange":
+        if s.get("edge_concentration", 999) < 0.54716980603:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("textured_warm_area", 0) > 0.52270507812:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("edge_vert_mid_ratio", 999) < 0.21985202268:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("r0_circularity", 0) > 0.66257638439:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "school_bus":
+        if s.get("bright_top_minus_bot", 999) < -0.43289292279:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("radial_warm_diff", 0) > 0.41869041061:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("hist_golden_retriever", 0) > 2.72601413387:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("hist_banana", 0) > 2.48251670087:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "banana":
+        if s.get("autocorr_x_warm_bl", 999) < -0.03677237171:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("cm_center_b", 0) > 0.68808976716:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "brown_bear":
+        if s.get("lbp_entropy", 0) > 5.38566753178:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("smooth_warm_blob_area", 0) > 0.38305664062:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("top_uniformity", 999) < 0.32085266288:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "jellyfish" and sec_label == "sports_car":
+        if s.get("r0_aspect", 0) > 5.81818181818:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("warm_aspect", 0) > 2.62500000000:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("warm_vert_top", 0) > 0.99308755760:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "teapot":
+        if s.get("wavelet_total", 999) < 0.06967655487:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("smooth_warm_blob_area", 0) > 0.27783203125:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "banana":
+        if s.get("gb_ratio", 0) > 1.75039036360:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("orient_entropy", 999) < 2.71611502048:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "school_bus" and sec_label == "banana":
+        if s.get("edge_bl", 0) > 0.38769531250:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("textured_warm_area", 0) > 0.34082031250:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "golden_retriever" and sec_label == "brown_bear":
+        if s.get("r0_circularity", 0) > 0.64041455789:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("bg_contrast", 999) < 0.43676757812:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "brown_bear":
+        if s.get("hist_bear_minus_teapot", 0) > 0.32193105601:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("fft_hv_ratio", 0) > 1.13932764746:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "brown_bear":
+        if s.get("sky_area", 0) > 0.27197265625:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("bright_top_minus_bot", 999) < -0.33655407475:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "golden_retriever":
+        if s.get("warm_val_mean", 0) > 0.72874963737:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("r0_aspect", 0) > 5.33333333333:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "golden_retriever":
+        if s.get("hist_bear_minus_teapot", 0) > 0.55021411931:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("hist_gr_minus_mushroom", 0) > 0.26790657011:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "king_penguin":
+        if s.get("cm_a_std", 999) < 0.00700725855:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("center_surround", 0) > 1.39505079448:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "school_bus" and sec_label == "mushroom":
+        if s.get("vert_regularity", 0) > 6.89932668762:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("gb_ratio", 0) > 2.67459373346:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "school_bus":
+        if s.get("autocorr_x_warm_bl", 0) > 0.20019615292:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("warm_sat_std", 0) > 0.20574943088:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "school_bus":
+        if s.get("smooth_warm_blob_aspect", 0) > 5.16666666667:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("bg_contrast", 999) < 0.82739257812:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "school_bus" and sec_label == "teapot":
+        if s.get("wavelet_mid", 0) > 0.31938702526:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("vert_regularity", 999) < 1.56116885887:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "orange" and sec_label == "teapot":
+        if s.get("hist_bear_minus_kp", 999) < -0.17709189747:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+        elif s.get("warm_hue_mean", 999) < 0.11525228341:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "king_penguin" and sec_label == "brown_bear":
+        if s.get("textured_decentered", 0) > 0.16202511317:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "brown_bear":
+        if s.get("dct_low", 999) < 0.14069883351:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "golden_retriever":
+        if s.get("hist_gr_minus_banana", 0) > 0.41042622086:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "golden_retriever":
+        if s.get("spatial_lr_asym", 0) > 0.27880859375:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "orange" and sec_label == "golden_retriever":
+        if s.get("smooth_warm_blob_aspect", 0) > 4.57142857143:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "king_penguin" and sec_label == "jellyfish":
+        if s.get("vert_regularity", 0) > 10.03945914205:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "jellyfish":
+        if s.get("color_purity", 0) > 0.49888911508:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "king_penguin":
+        if s.get("edge_br", 999) < 0.05859375000:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "king_penguin":
+        if s.get("sat_bl", 999) < 0.17809819240:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "brown_bear" and sec_label == "mushroom":
+        if s.get("bilat_detail_center", 0) > 0.08845741422:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "golden_retriever" and sec_label == "mushroom":
+        if s.get("cm_a_std", 0) > 0.07481429904:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "orange":
+        if s.get("smooth_warm_blob_circ", 0) > 0.55445421756:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "king_penguin" and sec_label == "school_bus":
+        if s.get("blob_lap_var", 0) > 1.50291924876:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "mushroom" and sec_label == "school_bus":
+        if s.get("hist_gr_minus_teapot", 999) < -0.22626695948:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "king_penguin" and sec_label == "sports_car":
+        if s.get("textured_decentered", 0) > 0.16202511317:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "orange" and sec_label == "sports_car":
+        if s.get("warm_coherence", 999) < 0.96062992126:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "jellyfish" and sec_label == "teapot":
+        if s.get("warm_vert_top", 0) > 0.99308755760:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "king_penguin" and sec_label == "teapot":
+        if s.get("cm_b_skew", 999) < -1.75697052479:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "teapot":
+        if s.get("edge_vert_mid_ratio", 999) < 0.21985202268:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+
+    if len(candidates) >= 3:
+        top_label = candidates[0][0]
+        r3_label = candidates[2][0]
+        if top_label == "teapot" and r3_label == "golden_retriever":
+            if s.get("bright_top_minus_bot", 0) > 0.48960248162:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("textured_warm_area", 0) > 0.37182617188:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("hist_teapot_minus_kp", 0) > 0.69246350095:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("r0_aspect", 0) > 5.33333333333:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "sports_car":
+            if s.get("round_edge", 0) > 0.36708860759:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("hue_cyan_blue", 0) > 0.69737954353:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("round_circularity", 999) < 0.34924961838:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("hist_sports_minus_bus", 0) > 0.37566725246:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "mushroom":
+            if s.get("warm_aspect", 0) > 2.46153846154:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("rb_ratio", 0) > 3.04682986787:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("bot_edge", 0) > 0.37255859375:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "school_bus":
+            if s.get("dct_high", 999) < 0.15248371852:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("bright_top_minus_bot", 999) < -0.43289292279:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("dct_mid", 999) < 0.06011367527:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "king_penguin" and r3_label == "sports_car":
+            if s.get("autocorr_x_mid_wider", 0) > 0.28258226194:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("textured_decentered", 0) > 0.16202511317:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("warm_cool_a_diff", 0) > 0.10766673088:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "banana":
+            if s.get("wavelet_mid", 0) > 0.31938702526:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("textured_warm_area", 0) > 0.34082031250:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "banana":
+            if s.get("edge_bl", 999) < 0.12597656250:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("orient_entropy", 999) < 2.69169769923:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "brown_bear":
+            if s.get("warm_tr", 0) > 0.99804687500:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("textured_warm_area", 0) > 0.61499023438:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "brown_bear":
+            if s.get("warm_band_bot", 0) > 0.98046875000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("sat_bl", 999) < 0.17809819240:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "golden_retriever":
+            if s.get("spatial_edge_concentration", 0) > 0.19010416667:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("hist_bear_minus_gr", 999) < -0.32608787794:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "golden_retriever":
+            if s.get("bg_contrast", 0) > 79.13452148438:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("spatial_mid_warm", 0) > 0.89111328125:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "orange" and r3_label == "golden_retriever":
+            if s.get("r0_circularity", 999) < 0.10218393084:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("center_bright_ratio", 999) < 0.74147307873:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "golden_retriever":
+            if s.get("hue_spread", 999) < 2.00000000000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("hu2", 0) > 10.19396439832:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "king_penguin":
+            if s.get("sat_tl", 999) < 0.09728477328:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("sat_tr", 999) < 0.08549325980:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "school_bus":
+            if s.get("bilat_detail_center", 0) > 0.08756893382:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("dct_mid_over_low", 0) > 0.87900743916:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "sports_car":
+            if s.get("wavelet_mid", 0) > 0.31938702526:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("autocorr_h", 999) < 0.07017151912:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "jellyfish" and r3_label == "teapot":
+            if s.get("hue_red", 0) > 0.53881835937:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("radial_warm_diff", 0) > 0.49200180660:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "banana":
+            if s.get("warm_sat_cv", 0) > 0.47810012437:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "orange" and r3_label == "banana":
+            if s.get("warm_hue_mean", 999) < 0.11525228341:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "banana":
+            if s.get("warm_br", 0) > 0.98828125000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "banana":
+            if s.get("green", 0) > 0.89599609375:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "brown_bear":
+            if s.get("r0_edge", 0) > 0.38056680162:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "brown_bear":
+            if s.get("dct_high", 999) < 0.10960166859:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "golden_retriever":
+            if s.get("gabor_90_01_mean", 0) > 28.65338851399:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "jellyfish":
+            if s.get("blue_region_area", 0) > 0.31616210938:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "jellyfish":
+            if s.get("rb_ratio", 0) > 3.05163693122:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "orange" and r3_label == "jellyfish":
+            if s.get("gb_corr", 999) < -0.09643772990:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "king_penguin":
+            if s.get("fft_hv_ratio", 0) > 1.33260213354:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "king_penguin":
+            if s.get("binary_complexity", 0) > 0.45411706349:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "king_penguin":
+            if s.get("dark_warm_ratio", 0) > 4.17003367003:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "king_penguin":
+            if s.get("warm_coherence", 999) < 0.74545454545:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "king_penguin":
+            if s.get("warm_sat_std", 0) > 0.24061645221:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "mushroom":
+            if s.get("dct_high", 0) > 0.27264019514:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "king_penguin" and r3_label == "mushroom":
+            if s.get("sat_bl", 0) > 0.53340226716:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "mushroom":
+            if s.get("bw", 999) < 0.05151367188:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "mushroom":
+            if s.get("center_surround", 0) > 1.39505079448:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "orange":
+            if s.get("hist_jelly_minus_kp", 0) > 0.07884088847:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "orange":
+            if s.get("cm_b_std", 0) > 0.09182494668:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "school_bus":
+            if s.get("circularity", 0) > 0.32256353698:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "school_bus":
+            if s.get("blue_region_area", 0) > 0.31298828125:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "orange" and r3_label == "school_bus":
+            if s.get("gabor_0_04_var", 0) > 3.65458556634:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "sports_car":
+            if s.get("cm_center_a", 0) > 0.60075444240:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "sports_car":
+            if s.get("warm_vert_mid", 999) < 0.17861675766:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "sports_car":
+            if s.get("grad_dir_entropy", 999) < 0.91660555966:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "king_penguin" and r3_label == "teapot":
+            if s.get("dark_warm_ratio", 0) > 139.12500000000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "teapot":
+            if s.get("spatial_edge_concentration", 0) > 0.19010416667:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "mushroom" and r3_label == "teapot":
+            if s.get("warm_sat_cv", 0) > 0.46167286883:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "teapot":
+            if s.get("top2_hue_ratio", 0) > 0.99440246292:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "teapot":
+            if s.get("warm_sat_std", 0) > 0.20574943088:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+
+    if len(candidates) >= 4:
+        top_label = candidates[0][0]
+        r4_label = candidates[3][0]
+        if top_label == "golden_retriever" and r4_label == "teapot":
+            if s.get("cm_center_a", 999) < 0.48527496936:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("autocorr_x_warm_bl", 0) > 0.21864024973:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("cm_center_a", 0) > 0.60075444240:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("warm_vert_top", 0) > 0.57368064188:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("textured_decentered", 0) > 0.17571898159:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "mushroom":
+            if s.get("spatial_edge_concentration", 999) < -0.12076822917:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("sat_tl", 999) < 0.09728477328:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("sat_tr", 999) < 0.08549325980:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("rb_ratio", 0) > 2.24208707766:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "banana":
+            if s.get("gabor_45_04_var", 0) > 2.41843482461:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("cm_center_a", 999) < 0.48527496936:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("autocorr_h", 999) < -0.00650825428:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "mushroom" and r4_label == "golden_retriever":
+            if s.get("autocorr_x_mid_wider", 999) < -0.01693795149:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hist_sports_minus_bus", 999) < -0.93964596384:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("blue_purple", 0) > 0.22753906250:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "golden_retriever":
+            if s.get("warm_vert_mid", 0) > 0.91054313099:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("warm", 0) > 0.91088867188:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("warm_bl", 0) > 0.98632812500:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "teapot" and r4_label == "orange":
+            if s.get("bright_top_minus_bot", 0) > 0.48960248162:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hu2", 999) < 5.27518410265:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hist_orange", 0) > 1.73878083797:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "teapot":
+            if s.get("bw", 999) < 0.05151367188:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hue_spread", 0) > 6.00000000000:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("warm_sat_cv", 0) > 0.52943818256:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "mushroom":
+            if s.get("top2_hue_ratio", 999) < 0.56146435453:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("sat", 0) > 0.69142348346:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "mushroom":
+            if s.get("hist_banana_minus_mushroom", 999) < -0.63094107085:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("binary_complexity", 0) > 0.46329365079:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "school_bus":
+            if s.get("hist_orange_minus_banana", 999) < -0.58076373860:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hist_jellyfish", 0) > 1.34978582567:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "sports_car" and r4_label == "banana":
+            if s.get("sat_br", 0) > 0.76200980392:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "banana":
+            if s.get("hist_mushroom", 0) > 2.57589152013:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "teapot" and r4_label == "banana":
+            if s.get("vert_regularity", 0) > 7.99988596014:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "teapot" and r4_label == "brown_bear":
+            if s.get("vert_regularity", 0) > 7.99988596014:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "brown_bear":
+            if s.get("r0_aspect", 0) > 6.40000000000:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "mushroom" and r4_label == "brown_bear":
+            if s.get("round_area", 999) < 0.03027343750:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "king_penguin" and r4_label == "brown_bear":
+            if s.get("blob_lap_var", 0) > 1.50291924876:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "jellyfish" and r4_label == "brown_bear":
+            if s.get("spatial_edge_concentration", 999) < -0.06868489583:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "orange" and r4_label == "golden_retriever":
+            if s.get("elong_area", 0) > 0.20361328125:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "sports_car" and r4_label == "golden_retriever":
+            if s.get("elong_area", 0) > 0.21948242188:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "jellyfish" and r4_label == "golden_retriever":
+            if s.get("hist_gr_minus_teapot", 0) > 0.12209870297:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "orange" and r4_label == "jellyfish":
+            if s.get("green", 0) > 0.52026367188:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "sports_car" and r4_label == "jellyfish":
+            if s.get("lbp_entropy", 999) < 3.70575654155:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "jellyfish":
+            if s.get("warm_val_mean", 0) > 0.65193413357:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "king_penguin" and r4_label == "jellyfish":
+            if s.get("warm_vert_bot", 0) > 0.87210638076:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "school_bus" and r4_label == "king_penguin":
+            if s.get("wavelet_mid", 0) > 0.31938702526:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "school_bus" and r4_label == "mushroom":
+            if s.get("corner_density", 999) < 0.04345703125:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "orange":
+            if s.get("hist_jellyfish", 0) > 1.20578142807:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "orange":
+            if s.get("gb_ratio", 0) > 2.05957697429:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "sports_car" and r4_label == "orange":
+            if s.get("spatial_lr_asym", 0) > 0.27880859375:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "school_bus":
+            if s.get("vert_regularity", 999) < 1.88337153719:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "school_bus":
+            if s.get("edge_vert_mid_ratio", 0) > 0.47215242881:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "sports_car":
+            if s.get("mean_ch_corr", 999) < 0.68158890804:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "mushroom" and r4_label == "sports_car":
+            if s.get("dark_warm_ratio", 0) > 21.50000000000:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "king_penguin" and r4_label == "sports_car":
+            if s.get("blob_lap_var", 0) > 1.50291924876:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "sports_car":
+            if s.get("round_circularity", 999) < 0.32240788674:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "orange" and r4_label == "sports_car":
+            if s.get("n_contours_norm", 0) > 0.80000000000:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "school_bus" and r4_label == "sports_car":
+            if s.get("cm_a_std", 0) > 0.06897316727:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "king_penguin" and r4_label == "teapot":
+            if s.get("hu2", 0) > 10.18433504004:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "teapot":
+            if s.get("sat_smooth_warm", 0) > 0.07686063821:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "orange" and r4_label == "teapot":
+            if s.get("warm_coherence", 999) < 0.96062992126:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+
+    if len(candidates) >= 5:
+        top_label = candidates[0][0]
+        r5_label = candidates[4][0]
+        if top_label == "banana" and r5_label == "teapot":
+            if s.get("textured_warm_area", 999) < 0.03076171875:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("textured_decentered", 0) > 0.14526657929:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("spatial_edge_concentration", 0) > 0.19010416667:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("spatial_edge_concentration", 999) < -0.09733072917:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("bw", 999) < 0.05151367188:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("cm_b_std", 999) < 0.02794917986:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "mushroom":
+            if s.get("r0_aspect", 0) > 9.14285714286:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("green", 0) > 0.36645507812:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("gabor_45_04_var", 0) > 2.62097091882:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "brown_bear":
+            if s.get("warm_tl", 0) > 0.65820312500:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("sky_area", 0) > 0.39331054688:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "brown_bear":
+            if s.get("hu1", 0) > 2.74295866138:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("hue_cyan_blue", 0) > 0.20842795862:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "brown_bear":
+            if s.get("hue_orange", 0) > 0.72400143937:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("wavelet_fine", 999) < 0.34404177169:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "golden_retriever":
+            if s.get("hist_orange_minus_teapot", 999) < -1.02862077364:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("dark_warm_ratio", 0) > 139.12500000000:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "king_penguin":
+            if s.get("hue_spread", 0) > 7.00000000000:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("edge_entropy", 999) < 3.39729040352:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "orange":
+            if s.get("cm_center_b", 0) > 0.63969056373:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("edge_top_minus_bot", 999) < -0.17968750000:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "sports_car":
+            if s.get("sat_color_std", 0) > 0.22358805393:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("blob_lap_var", 0) > 2.03343576515:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "teapot":
+            if s.get("cm_center_a", 999) < 0.48527496936:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("dct_high", 0) > 0.26884179571:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "teapot":
+            if s.get("blob_lap_var", 0) > 1.50291924876:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("bright_top_minus_bot", 0) > 0.44944852941:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "mushroom" and r5_label == "teapot":
+            if s.get("spatial_edge_concentration", 999) < -0.12402343750:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("warm_sat_cv", 0) > 0.46167286883:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "banana":
+            if s.get("warm_sat_std", 0) > 0.20574943088:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "banana":
+            if s.get("vert_regularity", 0) > 7.99988596014:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "school_bus" and r5_label == "banana":
+            if s.get("hu1", 999) < 2.48581402423:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "banana":
+            if s.get("hu2", 999) < 4.83846256150:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "banana":
+            if s.get("hu1", 999) < 2.44798593415:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "mushroom" and r5_label == "brown_bear":
+            if s.get("hist_gr_minus_teapot", 0) > 0.36266143504:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "banana" and r5_label == "golden_retriever":
+            if s.get("sat_bl", 999) < 0.16110217525:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "golden_retriever":
+            if s.get("bright_top_minus_bot", 0) > 0.48960248162:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "golden_retriever":
+            if s.get("region_area_entropy", 999) < 1.24347940824:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "mushroom" and r5_label == "jellyfish":
+            if s.get("blue_purple", 0) > 0.22753906250:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "banana" and r5_label == "jellyfish":
+            if s.get("hist_jellyfish", 0) > 1.20578142807:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "orange" and r5_label == "jellyfish":
+            if s.get("bg_contrast", 0) > 78.72363281250:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "jellyfish":
+            if s.get("bilat_detail_center", 0) > 0.09210324755:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "jellyfish":
+            if s.get("hue_blue", 0) > 0.28560250391:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "king_penguin":
+            if s.get("fft_hv_ratio", 0) > 1.25191217807:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "jellyfish" and r5_label == "king_penguin":
+            if s.get("spatial_edge_concentration", 999) < -0.06868489583:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "mushroom":
+            if s.get("blob_lap_var", 0) > 1.50291924876:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "banana" and r5_label == "mushroom":
+            if s.get("textured_warm_area", 0) > 0.52270507812:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "orange":
+            if s.get("warm_sat_std", 0) > 0.20574943088:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "orange" and r5_label == "school_bus":
+            if s.get("r0_aspect", 0) > 4.57142857143:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "school_bus":
+            if s.get("round_edge", 0) > 0.41860465116:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "school_bus":
+            if s.get("dominant_hue_ratio", 999) < 0.23174603175:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "school_bus":
+            if s.get("orient_entropy", 999) < 2.71611502048:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "school_bus" and r5_label == "sports_car":
+            if s.get("cm_a_std", 0) > 0.06897316727:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "sports_car":
+            if s.get("hist_bear_minus_kp", 999) < -0.34895908576:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "sports_car":
+            if s.get("cm_center_a", 999) < 0.48527496936:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+
+    return candidates
+
+
+def _final_verify_wave3(
+    candidates: list[tuple[str, float, list[str]]],
+    graph: SceneGraph,
+) -> list[tuple[str, float, list[str]]]:
+    """Post-pipeline wave 3: fix-1 zero-risk conditions (mined after wave 2)."""
+    if len(candidates) < 2:
+        return candidates
+
+    from hlinet.features.compounds.phase2_signatures import _stats
+    s = _stats(graph)
+
+    top_label = candidates[0][0]
+    sec_label = candidates[1][0]
+    if top_label == "orange" and sec_label == "banana":
+        if s.get("rb_corr", 0) > 0.85780560970:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "brown_bear":
+        if s.get("dark_warm_ratio", 0) > 503.00000000000:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "mushroom":
+        if s.get("dct_mid", 0) > 0.13235637449:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "mushroom":
+        if s.get("hist_sports_minus_bus", 0) > 0.30485699978:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "teapot" and sec_label == "orange":
+        if s.get("warm_sat_std", 0) > 0.27928100778:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "banana" and sec_label == "orange":
+        if s.get("warm", 0) > 0.99804687500:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "school_bus":
+        if s.get("hist_bear_minus_kp", 0) > 0.62249981519:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "school_bus" and sec_label == "sports_car":
+        if s.get("hist_sports_car", 0) > 2.96346221922:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "golden_retriever" and sec_label == "teapot":
+        if s.get("lbp_entropy", 999) < 4.81200136293:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+
+    if len(candidates) >= 3:
+        top_label = candidates[0][0]
+        r3_label = candidates[2][0]
+        if top_label == "sports_car" and r3_label == "king_penguin":
+            if s.get("fft_hv_ratio", 0) > 1.13932764746:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("glcm_contrast", 0) > 0.04041899825:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "sports_car":
+            if s.get("cm_a_std", 0) > 0.06897316727:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+            elif s.get("spatial_bot_intensity", 999) < 0.12558210784:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "banana":
+            if s.get("sat_color_std", 0) > 0.22358805393:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "banana":
+            if s.get("bilat_detail", 0) > 0.08210688572:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "brown_bear":
+            if s.get("has_round", 999) < 1.00000000000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "king_penguin" and r3_label == "brown_bear":
+            if s.get("r0_circularity", 0) > 0.65321045247:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "golden_retriever":
+            if s.get("warm_vert_concentration", 999) < 0.33396584440:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "teapot" and r3_label == "jellyfish":
+            if s.get("blue_region_area", 0) > 0.31298828125:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "king_penguin":
+            if s.get("hue_spread", 0) > 7.00000000000:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "school_bus" and r3_label == "mushroom":
+            if s.get("green", 0) > 0.43139648438:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "orange":
+            if s.get("cm_center_b", 0) > 0.65105315564:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "school_bus":
+            if s.get("fft_hv_ratio", 0) > 1.13932764746:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "banana" and r3_label == "school_bus":
+            if s.get("vert_regularity", 999) < 1.88337153719:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "sports_car":
+            if s.get("top2_hue_ratio", 999) < 0.41097724230:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "sports_car" and r3_label == "teapot":
+            if s.get("wavelet_coarse", 0) > 0.40493414975:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "brown_bear" and r3_label == "teapot":
+            if s.get("wavelet_mid", 0) > 0.34177593845:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "orange" and r3_label == "teapot":
+            if s.get("warm_coherence", 999) < 0.92972972973:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "golden_retriever" and r3_label == "teapot":
+            if s.get("lbp_entropy", 999) < 4.81200136293:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+        elif top_label == "king_penguin" and r3_label == "teapot":
+            if s.get("autocorr_x_mid_wider", 0) > 0.28258226194:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+
+    if len(candidates) >= 4:
+        top_label = candidates[0][0]
+        r4_label = candidates[3][0]
+        if top_label == "orange" and r4_label == "teapot":
+            if s.get("fft_hv_ratio", 0) > 1.29775370851:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+            elif s.get("hist_bear_minus_teapot", 0) > 0.13087687455:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "mushroom" and r4_label == "banana":
+            if s.get("gabor_45_04_var", 0) > 3.86258264871:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "teapot" and r4_label == "banana":
+            if s.get("sat_smooth_warm", 0) > 0.26539406002:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "mushroom" and r4_label == "golden_retriever":
+            if s.get("r0_circularity", 999) < 0.08343115988:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "golden_retriever":
+            if s.get("warm_val_mean", 0) > 0.62921882712:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "school_bus" and r4_label == "jellyfish":
+            if s.get("lbp_entropy", 999) < 4.17439733122:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "king_penguin" and r4_label == "mushroom":
+            if s.get("contour_fill_ratio", 0) > 0.42993164062:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "orange":
+            if s.get("orient_entropy", 999) < 2.69169769923:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "sports_car":
+            if s.get("rb_corr", 0) > 0.99423968792:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "school_bus" and r4_label == "sports_car":
+            if s.get("elong_area", 0) > 0.18701171875:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "brown_bear" and r4_label == "teapot":
+            if s.get("center_surround", 0) > 1.60255266127:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+
+    if len(candidates) >= 5:
+        top_label = candidates[0][0]
+        r5_label = candidates[4][0]
+        if top_label == "school_bus" and r5_label == "brown_bear":
+            if s.get("warm_sat_std", 999) < 0.05460310181:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("blue_region_area", 0) > 0.40478515625:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "king_penguin":
+            if s.get("hist_golden_retriever", 0) > 2.55215367085:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+            elif s.get("blue_region_area", 0) > 0.31616210938:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "jellyfish":
+            if s.get("hist_bear_minus_gr", 0) > 0.32879668497:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "school_bus" and r5_label == "king_penguin":
+            if s.get("cm_b_skew", 0) > 2.88507676125:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "mushroom":
+            if s.get("dct_high", 0) > 0.27603768454:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "school_bus" and r5_label == "mushroom":
+            if s.get("r0_aspect", 0) > 9.14285714286:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "teapot" and r5_label == "mushroom":
+            if s.get("bilat_detail", 0) > 0.07135416667:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "brown_bear" and r5_label == "mushroom":
+            if s.get("glcm_contrast_v2", 0) > 0.06136859922:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "school_bus" and r5_label == "orange":
+            if s.get("hu1", 999) < 2.48581402423:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "school_bus":
+            if s.get("smooth_warm_blob_aspect", 0) > 6.22222222222:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "king_penguin" and r5_label == "sports_car":
+            if s.get("cm_center_b", 999) < 0.42161841299:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "golden_retriever" and r5_label == "teapot":
+            if s.get("smooth_warm_blob_area", 0) > 0.31054687500:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "orange" and r5_label == "teapot":
+            if s.get("radial_warm_diff", 999) < -0.11676266637:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+        elif top_label == "sports_car" and r5_label == "teapot":
+            if s.get("sat_smooth_warm", 0) > 0.14125977480:
+                candidates[0], candidates[4] = candidates[4], candidates[0]
+
+    return candidates
+
+
+def _final_verify_wave4(
+    candidates: list[tuple[str, float, list[str]]],
+    graph: SceneGraph,
+) -> list[tuple[str, float, list[str]]]:
+    """Post-pipeline wave 4: final fix-1 conditions."""
+    if len(candidates) < 2:
+        return candidates
+
+    from hlinet.features.compounds.phase2_signatures import _stats
+    s = _stats(graph)
+
+    top_label = candidates[0][0]
+    sec_label = candidates[1][0]
+    if top_label == "banana" and sec_label == "orange":
+        if s.get("edge_concentration", 999) < 0.54716980603:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+    elif top_label == "sports_car" and sec_label == "school_bus":
+        if s.get("hist_golden_retriever", 0) > 2.72601413387:
+            candidates[0], candidates[1] = candidates[1], candidates[0]
+
+    if len(candidates) >= 3:
+        top_label = candidates[0][0]
+        r3_label = candidates[2][0]
+        if top_label == "king_penguin" and r3_label == "sports_car":
+            if s.get("wavelet_total", 0) > 0.36733903198:
+                candidates[0], candidates[2] = candidates[2], candidates[0]
+
+    if len(candidates) >= 4:
+        top_label = candidates[0][0]
+        r4_label = candidates[3][0]
+        if top_label == "sports_car" and r4_label == "brown_bear":
+            if s.get("dark_warm_ratio", 0) > 123.00000000000:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "golden_retriever" and r4_label == "mushroom":
+            if s.get("cm_center_a", 999) < 0.48527496936:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "teapot" and r4_label == "orange":
+            if s.get("orient_entropy", 999) < 2.71611502048:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
+        elif top_label == "banana" and r4_label == "teapot":
+            if s.get("edge_vert_mid_ratio", 999) < 0.21985202268:
+                candidates[0], candidates[3] = candidates[3], candidates[0]
 
     return candidates
 

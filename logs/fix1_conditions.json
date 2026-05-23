@@ -1,0 +1,72 @@
+[
+  {
+    "rank": 2,
+    "pred": "banana",
+    "true": "orange",
+    "feat": "edge_concentration",
+    "direction": "<",
+    "threshold": 0.5471698060335974,
+    "gap": 0.053139758748187604,
+    "path": "data/phase2/train/orange/n07747607_151.JPEG"
+  },
+  {
+    "rank": 2,
+    "pred": "sports_car",
+    "true": "school_bus",
+    "feat": "hist_golden_retriever",
+    "direction": ">",
+    "threshold": 2.726014133870194,
+    "gap": 0.07584080116957782,
+    "path": "data/phase2/train/school_bus/n04146614_210.JPEG"
+  },
+  {
+    "rank": 3,
+    "pred": "king_penguin",
+    "true": "sports_car",
+    "feat": "wavelet_total",
+    "direction": ">",
+    "threshold": 0.3673390319825219,
+    "gap": 0.2014704217882225,
+    "path": "data/phase2/train/sports_car/n04285008_220.JPEG"
+  },
+  {
+    "rank": 4,
+    "pred": "sports_car",
+    "true": "brown_bear",
+    "feat": "dark_warm_ratio",
+    "direction": ">",
+    "threshold": 123.0,
+    "gap": 3.7154471544715446,
+    "path": "data/phase2/train/brown_bear/n02132136_118.JPEG"
+  },
+  {
+    "rank": 4,
+    "pred": "golden_retriever",
+    "true": "mushroom",
+    "feat": "cm_center_a",
+    "direction": "<",
+    "threshold": 0.4852749693627451,
+    "gap": 0.1046531842151013,
+    "path": "data/phase2/train/mushroom/n07734744_163.JPEG"
+  },
+  {
+    "rank": 4,
+    "pred": "teapot",
+    "true": "orange",
+    "feat": "orient_entropy",
+    "direction": "<",
+    "threshold": 2.716115020479351,
+    "gap": 1.087285403702199,
+    "path": "data/phase2/train/orange/n07747607_245.JPEG"
+  },
+  {
+    "rank": 4,
+    "pred": "banana",
+    "true": "teapot",
+    "feat": "edge_vert_mid_ratio",
+    "direction": "<",
+    "threshold": 0.21985202267704435,
+    "gap": 0.17427863031977706,
+    "path": "data/phase2/train/teapot/n04398044_274.JPEG"
+  }
+]

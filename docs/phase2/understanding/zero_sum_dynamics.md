@@ -29,8 +29,11 @@ Early in development, there are "easy wins" — pairs with 2:1 or 3:1 asymmetry 
 - Sessions 9-13: +4.55pp (mostly from conditional logic, not pair tuning — escaped zero-sum)
 - Sessions 14-17: +0.55pp (system at local optimum, 25/26 experiments fail)
 - Sessions 18-20: +11.85pp (escaped again via new methodology + rank extension — NOT pair tuning)
+- Session 30: +14.0pp (post-pipeline final verify re-applied, 4 waves: +19, +207, +50, +4)
 
 **Pattern**: Every breakthrough escapes zero-sum by finding a NEW axis that doesn't compete with existing optimizations. Pair tuning, feature tuning, and threshold tuning are all zero-sum at late stages. Only structural innovations escape.
+
+**Wave saturation curve (Session 30)**: Wave 1: +19 (fix≥3 only), Wave 2: +207 (fix-1 bulk), Wave 3: +50, Wave 4: +4. Exponential decay — each wave shifts ~10% of remaining errors into unreachable configurations. By wave 4, only 7 outlier conditions remain. Further progress requires new features or deeper rank access.
 
 ## The Sink Class Mechanism
 

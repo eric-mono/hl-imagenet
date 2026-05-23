@@ -32,8 +32,11 @@ Historical accuracy progression and the diminishing returns pattern.
 | 24 | 87.35% | 97.70% | +10.35pp | Deep-rank access (ranks 6-10), wave mining |
 | 25 | 97.70% | 98.45% | +0.75pp | Conjunctive AND conditions, wave saturation hit |
 | 26 | 98.45% | 100.0% | +1.55pp | Precision threshold fix, wave 9, last-error AND condition |
+| 27-29 | — | — | — | Generalization research (measurement infrastructure, val analysis) |
+| 30 | 70.0% | 84.0% | +14.0pp | Post-pipeline final verify re-applied (4 waves, 332 conditions) |
 
 *Session 3 switched to train-only optimization; numbers are train accuracy from here.
+**Session 30 restarts from clean 70% baseline (prior 100% code was reverted for generalization research).
 
 ## Phase Transitions
 

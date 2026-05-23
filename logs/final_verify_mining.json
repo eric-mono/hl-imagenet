@@ -1,0 +1,78 @@
+{
+  "total_images": 2000,
+  "total_correct": 1419,
+  "total_errors_rank2_5": 362,
+  "conditions_found": 7,
+  "conditions": [
+    {
+      "pred": "banana",
+      "true": "teapot",
+      "feat": "bw",
+      "direction": "<",
+      "threshold": 0.051513671875,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 15
+    },
+    {
+      "pred": "banana",
+      "true": "teapot",
+      "feat": "center_surround",
+      "direction": "<",
+      "threshold": 0.5436560424101088,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 15
+    },
+    {
+      "pred": "banana",
+      "true": "teapot",
+      "feat": "textured_decentered",
+      "direction": ">",
+      "threshold": 0.14526657929015935,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 15
+    },
+    {
+      "pred": "banana",
+      "true": "teapot",
+      "feat": "center_bright_ratio",
+      "direction": "<",
+      "threshold": 0.613666832447052,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 15
+    },
+    {
+      "pred": "school_bus",
+      "true": "banana",
+      "feat": "textured_warm_area",
+      "direction": ">",
+      "threshold": 0.3408203125,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 6
+    },
+    {
+      "pred": "brown_bear",
+      "true": "king_penguin",
+      "feat": "sat_tl",
+      "direction": "<",
+      "threshold": 0.09728477328431373,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 6
+    },
+    {
+      "pred": "sports_car",
+      "true": "mushroom",
+      "feat": "dct_high",
+      "direction": ">",
+      "threshold": 0.2726401951364638,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 4
+    }
+  ]
+}

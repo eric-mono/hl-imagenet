@@ -21,23 +21,23 @@ No trees are involved in this result.
 
 The later **100% train / 41.35% val** endpoint is the overfitting endpoint of the same Phase 2 pipeline. It proves that code can memorize as effectively as parameters when the loop rewards training accuracy.
 
-Anycode is separate. Its compiled forest reaches **64.4% val**, showing that the feature space contains more generalizable signal than the hand-written pipeline extracted, but it is a different architecture and should not be used to explain the 70% Phase 2 result.
+Anycode is separate and should not be used to explain the 70% Phase 2 result.
 
 ## What Actually Generalized
 
-The evidence points to three layers:
+The evidence points to three symbolic layers:
 
 - Base visual statistics generalize moderately.
 - Pairwise reranking generalizes best among the post-base interventions.
 - Verify rules overfit, especially when they fire on only a few training images.
 
-The best documented hand-built validation configuration is approximately **base + pairwise reranking: 51.9% val**. The full verify-wave system is worse on validation because it optimizes train corrections too specifically.
+For public reporting, the canonical hand-built symbolic system is the **Session 20/21 pipeline: 70.0% train / 49.4% val**. It includes base scoring, histogram blending, pairwise reranking, local verify, and rank-3/4/5 correction stages. The `base_rerank` mode at about **51.9% val** is an ablation, not the headline artifact.
 
 ## What To Do Next
 
 Stop optimizing train accuracy. Use train for proposing rules, a dev split for accepting or rejecting them, and keep val/test untouched. The HL loop needs a generalization reward, not a train reward.
 
-Make base + rerank the real baseline. Treat the 100% train system as an overfitting artifact. The useful symbolic system is the one around 51-52% val.
+Freeze the Session 20/21 symbolic pipeline as the main no-tree artifact. Treat the 100% train system as an overfitting artifact. Use `base_rerank` only as an ablation for understanding which layers transfer.
 
 Move from per-image verify rules to reusable heuristics. Accept rules only if they fire on enough examples, with support around 10-20, precision on held-out dev, and no class collapse. No more fix-1 thresholds.
 

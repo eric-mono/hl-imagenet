@@ -1,0 +1,51 @@
+{
+  "total_images": 2000,
+  "total_correct": 1400,
+  "selected_conditions": [
+    {
+      "rank": 2,
+      "pred": "golden_retriever",
+      "true": "brown_bear",
+      "feat": "wavelet_coarse",
+      "direction": ">",
+      "threshold": 0.5090500319743015,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 6
+    },
+    {
+      "rank": 2,
+      "pred": "teapot",
+      "true": "king_penguin",
+      "feat": "cm_b_skew",
+      "direction": ">",
+      "threshold": 2.914870023727417,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 4
+    },
+    {
+      "rank": 4,
+      "pred": "orange",
+      "true": "mushroom",
+      "feat": "rb_corr",
+      "direction": ">",
+      "threshold": 0.8443867564201355,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 3
+    },
+    {
+      "rank": 5,
+      "pred": "brown_bear",
+      "true": "mushroom",
+      "feat": "warm_sat_std",
+      "direction": ">",
+      "threshold": 0.20768115597398584,
+      "fix": 3,
+      "risk": 0,
+      "total_errors": 3
+    }
+  ],
+  "unique_fixes": 12
+}

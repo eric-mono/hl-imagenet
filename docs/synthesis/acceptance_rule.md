@@ -55,9 +55,33 @@ not marginal. Rules that pass with support=10 and net=+1 are likely noise.
 
 Maximum allowed complexity: 5 points.
 
-## Current Status
+## Empirical Findings (Session 29)
 
-As of Session 22b, the acceptance rule retroactively evaluates existing rules:
-- **38 unique pair blocks** across 4 verify stages
-- Rule-level credit assignment running (ablation-based)
-- Jellyfish and banana pair blocks are the only ones empirically passing on val
+### Inner_dev cannot accept/reject rules
+
+Greedy forward selection using inner_dev as acceptance criterion:
+- All 26 tested pairs pass on inner_dev (none rejected)
+- Val MONOTONICALLY DECREASES as pairs are added (51.9% → 50.0%)
+- The highest-ranked pairs on inner_dev are NOT the ones that transfer
+
+### What actually transfers
+
+Only banana/jellyfish verify pairs transfer to val (+0.9pp):
+- These classes have highly distinctive visual invariants
+- Their rules fire on broad visual properties, not narrow thresholds
+- The per-image ablation data suggested this, but forward selection confirmed it
+
+### Revised acceptance criterion
+
+The formal metric-based rule (support >= 10, dev net positive) is NECESSARY but NOT SUFFICIENT. It must be augmented with:
+
+1. **Feature-type check**: does the rule use robust visual concepts (color distinctiveness, shape) or narrow threshold combinations?
+2. **Threshold precision check**: rules with 4+ significant digits are likely overfit
+3. **Distribution-shift test**: augmentation-based pseudo-val (flip, brightness) as a proxy for real val
+4. **Ensemble interaction check**: does adding this pair to the current accepted set hurt?
+
+### Current operational configuration
+
+- **Default**: base_rerank + banana/jellyfish pairs = **52.8% val**
+- **Infrastructure available**: `set_verify_pair_whitelist()` for arbitrary pair subsets
+- **Test untouched**: no test-set evaluation has been run
