@@ -16,9 +16,33 @@ from hlinet.eval.metrics import EvalResult
 LOGS_ROOT = Path(__file__).parent.parent.parent / "logs"
 
 
-def _logs_dir_for_tag(tag: str) -> Path:
+def _infer_log_lineage(tag: str, data_dir: Path | None) -> str:
+    """Infer the experiment lineage for a report.
+
+    Historically any tag not starting with "phase2" was silently routed to
+    logs/phase1, which polluted that directory with later Phase 2 wave/repro
+    runs. The default dataset is now Phase 2, so fail toward phase2 unless the
+    caller explicitly names phase1 data or a phase1 tag.
+    """
+    tag_lower = tag.lower()
+    if tag_lower.startswith("phase1"):
+        return "phase1"
+    if tag_lower.startswith("phase2"):
+        return "phase2"
+
+    if data_dir is not None:
+        parts = {part.lower() for part in data_dir.resolve().parts}
+        if "phase2" in parts:
+            return "phase2"
+        if "imagenet_10" in parts or "imagenet_10_val" in parts:
+            return "phase1"
+
+    return "phase2"
+
+
+def _logs_dir_for_report(tag: str, data_dir: Path | None) -> Path:
     """Route reports into phase-specific log folders."""
-    return LOGS_ROOT / "phase2" if tag.startswith("phase2") else LOGS_ROOT / "phase1"
+    return LOGS_ROOT / _infer_log_lineage(tag, data_dir)
 
 
 def run_evaluation(
@@ -27,7 +51,7 @@ def run_evaluation(
     max_per_class: int | None = None,
     verbose: bool = True,
     auto_save: bool = True,
-    tag: str = "phase1",
+    tag: str = "phase2_eval",
 ) -> EvalResult:
     """Run full evaluation on the dataset. Always saves a log unless auto_save=False."""
     classes = classes or PHASE2_CLASSES
@@ -55,14 +79,14 @@ def run_evaluation(
                   f"latency={result.mean_latency_ms:.0f}ms")
 
     if auto_save:
-        save_report(result, tag=tag)
+        save_report(result, tag=tag, data_dir=data_dir)
 
     return result
 
 
-def save_report(result: EvalResult, tag: str = "phase1") -> Path:
+def save_report(result: EvalResult, tag: str = "phase2_eval", data_dir: Path | None = None) -> Path:
     """Save evaluation report to logs directory."""
-    logs_dir = _logs_dir_for_tag(tag)
+    logs_dir = _logs_dir_for_report(tag, data_dir)
     logs_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     report_path = logs_dir / f"eval_{tag}_{timestamp}.json"
@@ -108,7 +132,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run HL-Image-Net evaluation")
     parser.add_argument("--data-dir", type=Path, default=None)
     parser.add_argument("--max-per-class", type=int, default=None)
-    parser.add_argument("--tag", default="phase1")
+    parser.add_argument("--tag", default="phase2_eval")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
 
@@ -126,7 +150,7 @@ def main():
     print()
     print(result.summary())
 
-    report_path = save_report(result, tag=args.tag)
+    report_path = save_report(result, tag=args.tag, data_dir=args.data_dir)
     print(f"\nReport saved to: {report_path}")
 
 
