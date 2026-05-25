@@ -79,8 +79,9 @@ def generate():
     print(code)
 
     # Save to file
-    Path("logs/final_verify_wave2_code.py").write_text(code)
-    print(f"\n\nSaved to logs/final_verify_wave2_code.py")
+    out_path = Path("archive/phase2_verify_mining/final_verify_wave2_code.py")
+    out_path.write_text(code)
+    print(f"\n\nSaved to {out_path}")
 
 
 if __name__ == "__main__":

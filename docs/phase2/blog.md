@@ -1,6 +1,6 @@
 # Phase 2: Heuristic Learning for Symbolic ImageNet-10
 
-*What happened when Claude Code and Codex helped iteratively improve a pure symbolic vision system.*
+*What happened when Claude Code and Codex helped iteratively improve a non-neural symbolic vision system.*
 
 ---
 
@@ -10,7 +10,7 @@ Phase 1 showed that a coding agent could grow a symbolic image classifier from f
 
 Phase 2 was the stricter version:
 
-Can a pure symbolic vision system improve on a real 10-class ImageNet-style task through iterative rule discovery?
+The central question was whether a symbolic, non-neural vision system could improve on a real 10-class ImageNet-style task through iterative rule discovery.
 
 The system was built and maintained with Claude Code and Codex acting as research copilots. The loop was simple:
 
@@ -61,7 +61,7 @@ There is an important caveat. The system is not "parameter free." It contains tu
 
 ## Current Reproducible Results
 
-After the latest reproducibility audit, these are the current ground-truth numbers:
+After the latest reproducibility audit, these are the current audited numbers:
 
 | System | Train | Val | Reading |
 |---|---:|---:|---|
@@ -78,7 +78,11 @@ base_rerank: 55.4% train / 51.9% val
 full verify: 84.0% train / 50.5% val
 ```
 
-That is already enough to show the phenomenon.
+This contrast is sufficient for the main interpretation below: fitting can improve substantially, but the additional train accuracy does not automatically transfer.
+
+![Phase 2 accuracy trajectory](plots/01_accuracy_trajectory.png)
+
+*Figure 1. The main Phase 2 trajectory. The important visual pattern is the divergence between train optimization and validation transfer: the system can keep climbing on train, while the best currently reproducible symbolic core remains near the low-50s on validation. The archived 100% point is part of the audit trail, but it is not connected as the current reproducible endpoint.*
 
 ---
 
@@ -108,11 +112,15 @@ The high-level scoring pipeline tries to answer:
 
 This is why the system is best understood as a **symbolic visual program**, not as a flat set of if-statements.
 
+![Phase 2 pipeline architecture](plots/09_pipeline_architecture.png)
+
+*Figure 2. The final hand-built pipeline is a staged program. That matters because later failures are not isolated rule mistakes; they are interactions between scoring, ranking, reranking, and verification stages.*
+
 ---
 
 ## Finding 1: Fitting Is Surprisingly Doable
 
-The first surprising result is that regression to the training set is very doable, even without neural networks.
+The first notable result is that regression to the training set is highly achievable, even without neural networks.
 
 By adding more visual conditions and verification rules, the system can recover many training errors. A verify rule is usually a narrow conjunctive condition:
 
@@ -125,13 +133,17 @@ then swap to B
 
 These rules can be highly effective on train. They are executable corrections. The codebase learns to patch its own mistakes.
 
-That is the part that felt counterintuitive at first. Symbolic systems are often imagined as brittle and low-capacity. But once a coding agent can repeatedly inspect errors, write conditions, run evals, and keep positive patches, the codebase becomes a trainable object. It can absorb hundreds of corrections.
+That is the part that felt counterintuitive at first. Symbolic systems are often imagined as brittle and low-capacity. But once a coding agent can repeatedly inspect errors, write conditions, run evaluations, and keep positive patches, the codebase becomes an optimizable object. It can absorb hundreds of corrections.
 
 In other words:
 
-> Regression / fitting the train set is surprisingly doable, even symbolically.
+> Regression / fitting the train set is achievable, even symbolically.
 
 The archived 100% train endpoint is the extreme version of this phenomenon. The current reproducible 84.0% train system is the conservative version still present in the codebase.
+
+![All Phase 2 evaluations](plots/10_all_evaluations.png)
+
+*Figure 3. The full evaluation history shows why the 100% train result should be interpreted carefully. It was achieved in the experimental trajectory, but the public claim should distinguish historical logged endpoints from the currently reproducible code state.*
 
 ---
 
@@ -145,7 +157,7 @@ The `base_rerank` system reaches:
 55.4% train / 51.9% val
 ```
 
-That gap is only 3.5 percentage points. This is the system that actually generalizes best among the symbolic configurations currently being reported.
+That gap is only 3.5 percentage points. This is the most transferable symbolic configuration among the systems currently being reported.
 
 The full verify system reaches:
 
@@ -165,11 +177,19 @@ In a neural network, overfitting appears as weights that encode training-set qui
 
 The code looks interpretable, but interpretability does not automatically imply generalization.
 
+![Generalization gap](plots/05_generalization_gap.png)
+
+*Figure 4. The central Phase 2 pattern: the verify-rule system is much better on train, but not on validation. This is the main evidence that the issue is not whether symbolic code can fit examples; it is whether the fitted rules correspond to reusable visual structure.*
+
+![Pipeline ablation](plots/03_pipeline_ablation.png)
+
+*Figure 5. The ablation story is more informative than the single final number. Pairwise reranking is the useful transfer layer; the verify stages add train accuracy but do not form the highest-validation symbolic classifier.*
+
 ---
 
 ## Finding 3: Reranking Generalizes Better Than Verify Rules
 
-The strongest generalizing component is pairwise reranking.
+The most transferable post-scoring component is pairwise reranking.
 
 Many errors are not "the correct class had no evidence." Instead, the correct class was near the top, but the wrong class won by a small score gap. Pairwise reranking helps in exactly that situation.
 
@@ -201,6 +221,14 @@ verify rules: high train gain, weak or negative transfer
 
 This is why `base_rerank` is the clean symbolic baseline.
 
+![Top validation confusions](plots/08_top_confusions.png)
+
+*Figure 6. The largest errors are structured rather than uniformly distributed. Many are natural object-level confusions at 64x64: warm fruit against warm fruit, furry animals against each other, and shape-defined objects against visually similar blobs.*
+
+![Validation confusion matrix](plots/04_confusion_matrix.png)
+
+*Figure 7. The confusion matrix is useful because it shows where symbolic rules should be reusable pairwise operators rather than isolated fixes. A good rule should explain a repeated confusion pattern, not just rescue one image.*
+
 ---
 
 ## Finding 4: The Codebase Is The Model
@@ -219,21 +247,21 @@ In this project:
 | memory | logs, docs, plots, error audits |
 | regularization | patch acceptance rules, held-out checks, simplicity constraints |
 
-Once you see the mapping, the overfitting result is less surprising.
+Once this mapping is explicit, the overfitting result is less surprising.
 
 If the reward is train accuracy, the agent will optimize train accuracy. If narrow rules help train and the acceptance loop rewards them, the codebase accumulates narrow rules. The resulting artifact is not a clean human-designed symbolic theory of vision. It is an evolved program under selection pressure.
 
-That is both exciting and dangerous.
+This is both promising and risky.
 
-It is exciting because the system can improve through ordinary software edits. It can keep memory in files, logs, and tests. It can be inspected. It can be patched. It can expose its own failure cases.
+It is promising because the system can improve through ordinary software edits. It can keep memory in files, logs, and tests. It can be inspected. It can be patched. It can expose its own failure cases.
 
-It is dangerous because a codebase can overfit while looking reasonable. Every individual patch may have a plausible explanation. The aggregate system can still become a memorizer.
+It is risky because a codebase can overfit while looking reasonable. Every individual patch may have a plausible explanation. The aggregate system can still become a memorizer.
 
 ---
 
 ## Reflection: What This Adds To Heuristic Learning
 
-Jiayi Weng's heuristic-learning framing is powerful because it shifts the unit of learning. The learned object does not have to be a dense parameter vector. It can be a maintained software system: code, diagnostics, logs, tests, tools, and procedures that improve under feedback.
+Jiayi Weng's heuristic-learning framing is useful because it shifts the unit of learning. The learned object does not have to be a dense parameter vector. It can be a maintained software system: code, diagnostics, logs, tests, tools, and procedures that improve under feedback.
 
 Phase 2 supports that framing, but it also sharpens it.
 
@@ -268,7 +296,7 @@ representation
 -> next patch
 ```
 
-In Phase 2, that loop clearly learned. It accumulated visual features, discriminants, reranking mechanisms, verification stages, audit scripts, failure-pattern documents, and reproducibility tools. The repository became a form of memory. The codebase became the policy. The docs became the agent's long-term state.
+In Phase 2, that loop measurably changed the system. It accumulated visual features, discriminants, reranking mechanisms, verification stages, audit scripts, failure-pattern documents, and reproducibility tools. The repository became a form of memory. The codebase became the policy. The docs became the agent's long-term state.
 
 That is the positive lesson for heuristic learning.
 
@@ -280,7 +308,7 @@ But Phase 2 also shows that a heuristic-learning system needs the same conceptua
 
 The reward function matters. If the visible reward is train accuracy, the system will optimize train accuracy. It will not automatically discover generality merely because the updates are symbolic or human-readable.
 
-This is the most important correction to a naive reading of heuristic learning. Code is not immune to reward hacking. It can reward-hack in a very literal way: by writing executable special cases.
+This is the most important correction to a naive reading of heuristic learning. Code is not immune to reward hacking. It can exploit the reward in a literal way: by writing executable special cases.
 
 Weng notes that HL can forget in engineering-shaped ways: a new rule can fix one scenario and break an old one, a narrow test can be exploited, and rules can pile up until the system is no longer maintainable. Phase 2 is a direct perception-domain example. Verify rules fixed training failures, but many did not transfer; the system accumulated executable memory rather than reusable visual concepts.
 
@@ -340,7 +368,7 @@ Heuristic learning turns logs and docs into part of the learning system. That is
 
 But it creates a new requirement. If the codebase is the model, then a commit is a model checkpoint. If logs are memory, then log lineage is part of the experimental state. If a plot is used to tell the story, the script and input records must be auditable.
 
-The historical 100% train endpoint exposed this directly. The result was achieved and logged, but the exact code state was not preserved cleanly enough to be the current reproducible artifact. That is not a side issue. It is a lesson about heuristic learning as an experimental paradigm:
+The historical 100% train endpoint exposed this directly. The result was achieved and logged, but the exact code state was not preserved cleanly enough to be the current reproducible artifact. That is not a side issue. It is a methodological lesson about heuristic learning as an experimental paradigm:
 
 > Software-maintained learning systems need model-checkpoint discipline, not just source-control discipline.
 
@@ -367,7 +395,7 @@ It validates the idea that a coding agent can maintain and improve a non-neural 
 It also tests one of Weng's explicit boundaries. Weng argues that HL is bounded by what code can express, especially in complex perception and long-horizon generalization, and he specifically raises ImageNet as a hard case for pure Python without neural networks. Phase 2 does not solve ImageNet. It gives a more precise boundary:
 
 ```text
-pure symbolic HL can fit and partially generalize ImageNet-10,
+symbolic, non-neural HL can fit and partially generalize ImageNet-10,
 but the unresolved bottleneck is reusable visual representation and generalization.
 ```
 
@@ -409,9 +437,9 @@ This is the symbolic version of a familiar optimization problem: the system reac
 
 The archived 100% train result should not be the headline current claim, because the exact code state is not currently reproducible.
 
-But it still matters scientifically.
+But it still matters for interpretation.
 
-It shows that a symbolic heuristic-learning loop can keep pushing train accuracy until the code behaves like a memorizer. The important part is not that 100% train is useful. It is not. The important part is that the same overfitting pressure appears in a non-neural medium.
+It shows that a symbolic heuristic-learning loop can keep pushing train accuracy until the code behaves like a memorizer. The important part is not that 100% train is useful. It is not. The important part is that the same overfitting pressure can appear in a non-neural medium.
 
 The shape of the lesson is:
 
@@ -472,7 +500,7 @@ The current gap to CNNs appears to have four components.
 
 ### 1. Learned reusable representation
 
-The Phase 2 feature inventory is dominated by global or coarse spatial statistics: color coverage, saturation, edge density, texture variance, histogram prototypes, quadrant statistics, frequency bands, and a limited set of contour or region descriptors. These features are useful; they are not random. But they compress a 64x64 RGB image into a small set of hand-defined scalar measurements.
+The Phase 2 feature inventory is dominated by global or coarse spatial statistics: color coverage, saturation, edge density, texture variance, histogram prototypes, quadrant statistics, frequency bands, and a limited set of contour or region descriptors. These features are informative, but they compress a 64x64 RGB image into a small set of hand-defined scalar measurements.
 
 The resulting information loss is structural. Mean saturation cannot distinguish a yellow object in the center from yellow background at the border. Total green coverage mixes foreground and background. A global edge statistic cannot represent "rectangular windows along the upper side of a vehicle" or "handle and spout attached to a rounded body."
 
@@ -556,6 +584,14 @@ The compact diagnosis is:
 Or more carefully:
 
 > Phase 2 suggests that symbolic features can separate the training set when enough thresholded corrections are allowed. The gap to deep learning is that CNNs learn reusable local representations under strong inductive biases, while the current symbolic loop accumulates global statistics and narrow correction rules unless explicitly regularized.
+
+![System comparison](plots/06_system_comparison.png)
+
+*Figure 8. The comparison to the small CNN is not meant as a leaderboard claim. It is a diagnostic: learned representation still gives a much stronger validation result than the current hand-built symbolic representation.*
+
+![Feature ceiling](plots/07_feature_ceiling.png)
+
+*Figure 9. Repeated feature and model-combination experiments suggest a ceiling for the current global/coarse feature set. The next gain likely needs better object-centered and local reusable operators, not another layer of narrow threshold patches.*
 
 ---
 

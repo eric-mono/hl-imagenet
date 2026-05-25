@@ -233,7 +233,7 @@ hl-image-net/
 │   ├── eval/              # Dataset loader, metrics, evaluation runner
 │   └── registry.py        # Feature registry
 ├── scripts/
-│   ├── generate_plots.py  # Generate visualizations
+│   ├── plot01_trajectory.py  # Generate the Phase 2 trajectory plot
 │   └── predict_image.py   # Classify a single image
 ├── data/phase2/           # Train/val/test splits (not in repo)
 ├── logs/
@@ -266,13 +266,12 @@ python scripts/predict_image.py path/to/image.jpg
 
 ## Technical Details
 
-- **Language**: Python 3.11
+- **Language**: Python >=3.11
 - **Dependencies**: OpenCV, NumPy, SciPy, scikit-image, scikit-learn, NetworkX, Matplotlib
 - **Symbolic pipeline constraint**: no neural-network framework, no backpropagation, no learned embedding model
-- **Lines of code**: ~6400
 - **Eval log inventory**: tracked in [`logs/README.md`](logs/README.md) and [`logs/log_inventory.csv`](logs/log_inventory.csv)
 - **Phase 1**: 250 archived eval records, exploratory setup
-- **Phase 2**: 975 archived eval records, real 10-class symbolic pipeline
+- **Phase 2**: 976 archived eval records, real 10-class symbolic pipeline
 - **Coding agents**: Claude Code and Codex
 
 ---

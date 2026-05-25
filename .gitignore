@@ -15,3 +15,10 @@ data/
 *.jpg.large
 .DS_Store
 settings.local.json
+
+# Generated experiment artifacts
+hlinet/classifier/feature_db.npz
+additional_experiments/deep_learning/.venv/
+additional_experiments/deep_learning/models/
+*.pt
+*.joblib

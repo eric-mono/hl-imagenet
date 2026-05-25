@@ -1,7 +1,7 @@
 [project]
 name = "hlinet"
 version = "0.1.0"
-description = "A self-growing symbolic visual algebra for ImageNet classification"
+description = "Heuristic-learning image classification without neural networks"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.24",

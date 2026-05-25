@@ -62,9 +62,11 @@ python3 additional_experiments/deep_learning/train_mlp_baseline.py \
 ```
 
 Reports are saved under `additional_experiments/deep_learning/logs/`.
-Saved models go under `additional_experiments/deep_learning/models/`.
+Saved models go under `additional_experiments/deep_learning/models/`. That
+directory is intentionally gitignored; model checkpoints are generated artifacts,
+not part of the symbolic pipeline or the tracked repository state.
 
-## Predict With A Saved Model
+## Predict With A Locally Saved Model
 
 ```bash
 python3 additional_experiments/deep_learning/predict_mlp.py \
@@ -81,17 +83,15 @@ additional_experiments/deep_learning/.venv/bin/python \
 
 ## Interpreting The Gap
 
-The current symbolic Phase 2 result in the root README is:
+The current symbolic Phase 2 results in the root README are:
 
-- Train top-1: 48.75%
-- Val top-1: 50.1%
-- Val top-3: 74.2%
+- `base_rerank`: 55.4% train / 51.9% validation
+- `full` verify rules: 84.0% train / 50.5% validation
 
-Compare the MLP's validation top-1/top-3 against those numbers. If this MLP is
-below the symbolic system, the symbolic hand-built features are outperforming a
-small learned pixel baseline. If it is above, the delta is the approximate gap
-to a minimal neural model. A CNN or pretrained model would be a stronger deep
-learning baseline, but requires adding PyTorch or another DL framework.
+Compare the neural baselines against `base_rerank` when asking what transfers
+best, and against `full` when asking how train-fitting verify rules behave. The
+MLP is a dependency-light lower-bound neural baseline. The CNN is the stronger
+learned-representation reference in this folder.
 
 ## Current Result
 
@@ -113,17 +113,18 @@ additional_experiments/deep_learning/logs/mlp_baseline_20260514_025752.json
 
 | Model | Train Top-1 | Val Top-1 | Val Top-3 | Test Top-1 | Test Top-3 |
 |---|---:|---:|---:|---:|---:|
-| Symbolic Phase 2 | 48.75% | 50.1% | 74.2% | not yet reported here | not yet reported here |
+| Symbolic Phase 2 `base_rerank` | 55.4% | 51.9% | not reported here | not reported here | not reported here |
+| Symbolic Phase 2 `full` verify | 84.0% | 50.5% | not reported here | not reported here | not reported here |
 | MLP pixels, 32x32, hidden=256 | 93.7% | 39.4% | 70.65% | 42.7% | 73.5% |
 | Small CNN, 64x64, 10 CPU epochs | 76.0% | 71.8% | 92.0% | 71.2% | 91.6% |
 
-Gap on validation top-1: symbolic is **+10.7 percentage points** over this MLP
-baseline. The MLP memorizes the train split but generalizes worse, so this is a
-useful lower-bound neural baseline rather than a strong CNN comparison.
+Gap on validation top-1: `base_rerank` is **+12.5 percentage points** over this
+MLP baseline. The MLP memorizes the train split but generalizes worse, so this
+is a useful lower-bound neural baseline rather than a strong CNN comparison.
 
-Gap to the small CNN on validation top-1: CNN is **+21.7 percentage points**
-over the symbolic Phase 2 system. This is the more meaningful deep-learning
-baseline in this folder.
+Gap to the small CNN on validation top-1: CNN is **+19.9 percentage points**
+over `base_rerank`. This is the more meaningful deep-learning baseline in this
+folder.
 
 Top validation confusions for the MLP:
 
@@ -137,10 +138,11 @@ CNN run:
 
 ```text
 additional_experiments/deep_learning/logs/cnn_baseline_20260514_032227.json
-additional_experiments/deep_learning/models/cnn_baseline_latest.pt
 ```
 
-CNN top validation confusions are available in the JSON report.
+CNN top validation confusions are available in the JSON report. The checkpoint
+file referenced by the historical log is not tracked; rerun the command above
+with `--save-model` to regenerate it locally.
 
 ## CNN-Guided Symbolic Feature Mining
 

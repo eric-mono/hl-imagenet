@@ -1,4 +1,4 @@
-"""HL-Image-Net: A self-growing symbolic visual algebra for ImageNet classification."""
+"""HL-ImageNet: heuristic-learning image classification without neural networks."""
 
 from hlinet.types import Atom, Region, FeatureValue, SceneGraph, Prediction
 from hlinet.registry import registry
