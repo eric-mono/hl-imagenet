@@ -3,9 +3,10 @@
 This folder contains indexable, searchable knowledge about the hand-built Phase 2 symbolic pipeline. It covers the sigmoid-signature, histogram-blending, reranking, and verify-rule system. The anycode forest is documented separately under `../../anycode/`.
 
 **Key Phase 2 states**:
-- Session 20/21 hand-built pipeline: 70.0% train, 49.4% val. This is the main no-tree symbolic result.
-- Full verify-wave endpoint: 100.0% train (2000/2000), 41.35% val. This is an overfit train memorizer and should not be presented as a generalizing classifier.
-- Best documented generalizing hand-pipeline layer stack: base scoring + pairwise reranking at about 51.9% val.
+- `base_rerank`: 55.4% train, 51.9% val. This is the current best-generalizing no-tree symbolic core.
+- `full` verify-rule system: 84.0% train, 50.5% val. This is the current reproducible high-train symbolic system.
+- Archived full verify-wave endpoint: 100.0% train. This is historical evidence of executable memorization, but the exact code state is not currently reproducible and should not be presented as the current artifact.
+- Session 20/21 hand-built pipeline: 70.0% train, 49.4% val. This is a superseded historical state, not the current public-reporting baseline.
 
 ## How to use
 - **Before making a change**: read the relevant file to see what's been tried, what worked, and why things fail

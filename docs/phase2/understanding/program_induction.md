@@ -122,8 +122,9 @@ At 100% train accuracy with ~900 verify conditions, the system enters a novel st
 ### The overfitting-completeness tradeoff
 
 This creates an impossible choice:
-- **Keep 100% train**: Accept 41.35% val (58.65pp gap). The system has memorized all 2000 images.
-- **Improve val**: Must sacrifice train accuracy by removing verify waves. Best achievable: 51.9% val with base+reranking only (but train drops to ~52% too).
+- **Keep the archived 100% train endpoint**: Treat it as historical unless the exact code state is recovered. It shows that the system could memorize all 2000 train images.
+- **Use the current high-train artifact**: The reproducible `full` mode reaches 84.0% train / 50.5% val.
+- **Improve val**: Must sacrifice train accuracy by removing verify waves. Best documented current generalizing core is 51.9% val with `base_rerank` (55.4% train).
 - **No middle ground exists**: You cannot have both high train AND high val because the verify conditions that push train above ~52% are the same conditions that hurt val.
 
 ### Implication for program induction theory

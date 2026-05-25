@@ -1,6 +1,6 @@
 # HL-ImageNet: Heuristic-Learning Image Classification Without Neural Networks
 
-**A coding agent (Claude) iteratively built a purely symbolic image classifier using classical computer vision. No neural networks, no gradient descent, no backpropagation.**
+**Claude Code and Codex iteratively built a symbolic image classifier using classical computer vision. The main pipeline uses no neural networks, no gradient descent, and no backpropagation.**
 
 This is an application of Jiayi Weng's [Heuristic Learning](https://trinkle23897.github.io/learning-beyond-gradients/) framework to static image classification.
 
@@ -8,44 +8,34 @@ This is an application of Jiayi Weng's [Heuristic Learning](https://trinkle23897
 
 ## Phase 2 (Current): 10-Class Real Image Classification
 
-A proper train/val/test experiment with 10 real Tiny ImageNet classes and 2,000 images per split.
+A proper train/val/test experiment with 10 real Tiny ImageNet classes. Train and validation use 2,000 images each; test uses 1,000 images.
 
-### Results
+### Current Reproducible Results
 
-| Metric | Value |
-|--------|-------|
-| **Train top-1 accuracy** | **48.75%** (975/2000) |
-| **Val top-1 accuracy** | **50.1%** (1003/2000) |
-| Val top-3 accuracy | 74.2% (1484/2000) |
-| Resolution | 64x64 (Tiny ImageNet) |
-| Random baseline | 10% |
-| Inference time | ~100ms per image |
-| Eval iterations to date | 330+ |
+| System | Train top-1 | Val top-1 | Gap | Reading |
+|--------|------------:|----------:|----:|---------|
+| `base_rerank` | **55.4%** | **51.9%** | 3.5pp | Best generalizing symbolic core |
+| `full` verify rules | **84.0%** | **50.5%** | 33.5pp | High train accuracy, weak transfer |
+| archived historical endpoint | **100.0%** | not current ground truth | - | Reached in logs; exact code state is not currently reproducible |
+| small CNN baseline | 76.0% | 71.8% | 4.2pp | Learned-representation reference |
 
-### Per-Class Accuracy
+The strict current claim is:
 
-| Class | Train | Val | Difficulty |
-|-------|:---:|:---:|-----------|
-| school bus | 78.0% | 78.5% | Easiest — yellow+structure is unique |
-| jellyfish | 66.0% | 65.5% | Translucent blue is distinctive at 64x64 |
-| banana | 56.0% | 51.0% | Confused with orange, school bus |
-| sports car | 49.0% | 56.5% | Confused with school bus |
-| king penguin | 50.5% | 48.0% | Dark-light contrast helps |
-| orange | 45.0% | 50.5% | Confused with banana |
-| mushroom | 44.5% | 41.5% | Texture-defined, overlaps with bear/GR |
-| brown bear | 41.0% | 40.0% | Confused with GR, mushroom |
-| golden retriever | 37.5% | 40.0% | Warm-blob overlap with everything |
-| teapot | 21.5% | 30.0% | Shape-defined class in a color system |
+```text
+base_rerank: 55.4% train / 51.9% val
+full verify: 84.0% train / 50.5% val
+```
 
-### Top Confusions (Train)
+The historical 100% train endpoint matters because it shows that symbolic code can fit the training set very aggressively. It is not used as the current reproducible headline because the exact code state that produced it is not present at `HEAD`.
 
-| True class | Predicted as | Count | Root cause |
-|------------|-------------|:---:|-----------|
-| orange | banana | 53 | Both warm-colored round objects |
-| sports car | school bus | 42 | Both strong gradients + structure |
-| teapot | king penguin | 42 | Both can be dark/desaturated |
-| mushroom | banana | 38 | Both warm, textured |
-| teapot | banana | 34 | Copper/brass teapots look yellow |
+### Interpretation
+
+Phase 2 does **not** show that symbolic vision solves ImageNet-10. It shows a more specific boundary:
+
+1. A symbolic HL system has enough capacity to fit real-image training data far beyond the initial baseline.
+2. The best generalizing symbolic core is much lower: roughly 52% validation accuracy.
+3. Verification rules can push train accuracy very high, but they expose a sharp memorization/generalization gap.
+4. The likely gap to CNNs is not raw fitting capacity. It is learned reusable representation plus regularized credit assignment.
 
 ### 10 Classes
 
@@ -66,8 +56,8 @@ A proper train/val/test experiment with 10 real Tiny ImageNet classes and 2,000 
 
 | Split | Images/class | Total | Purpose |
 |-------|:---:|:---:|---------|
-| **Train** | 200 | 2,000 | HL loop tuning (all decisions based on this) |
-| **Val** | 200 | 2,000 | Generalization reporting only (never used for decisions) |
+| **Train** | 200 | 2,000 | HL loop tuning |
+| **Val** | 200 | 2,000 | Generalization reporting and audit |
 | **Test** | 100 | 1,000 | Touched once at the very end |
 | **External** | 50 | 500 | Official Tiny ImageNet val |
 
@@ -79,7 +69,9 @@ image (64x64 BGR)
   -> 50+ low-level stats (hue ratios, edge density, gradients, LBP, spatial)
   -> 10 class signatures (weighted sum of sigmoid activations + guards)
   -> mean-centered histogram prototype blending
-  -> pairwise reranking (24 discriminant pairs, gap-aware gating)
+  -> calibration and class repulsion
+  -> pairwise reranking (targeted discriminant pairs, gap-aware gating)
+  -> optional verify rules
   -> prediction with proof trace
 ```
 
@@ -105,7 +97,17 @@ final = 0.88 * signature_score + 0.12 * (hist_score - class_mean * 0.3)
 swap iff disc_margin > base_threshold + score_gap * gap_scale
 ```
 
-24 pairwise discriminant functions. Per-pair base thresholds calibrated by accuracy (84% -> -0.10, 58% -> 0.30).
+Targeted pairwise discriminant functions use per-pair base thresholds and rank-dependent gap scaling.
+
+**Layer 4 — Verify Rules:** The `full` mode adds many narrow local/rank/final verification rules. These rules improve train accuracy from 55.4% to 84.0%, but reduce validation from 51.9% to 50.5%, so they are treated as a diagnostic overfitting layer rather than the main generalizing system.
+
+### Pipeline Modes
+
+| Mode | What it includes | Role |
+|------|------------------|------|
+| `base` | signatures + histogram blend + calibration/repulsion | Core symbolic scorer |
+| `base_rerank` | `base` + pairwise reranking | Main generalizing symbolic result |
+| `full` | `base_rerank` + verify rules | Train-fitting diagnostic |
 
 ### Phase 2 Accuracy Trajectory
 
@@ -113,22 +115,24 @@ swap iff disc_margin > base_threshold + score_gap * gap_scale
 
 ### Phase 2 Experiment Logs
 
-- [`logs/session_reasoning.md`](logs/session_reasoning.md) — Full reasoning log: what was tried, why, results per iteration
-- [`docs/phase2/lessons.md`](docs/phase2/lessons.md) — 15 hard-won lessons from 330+ iterations
-- [`logs/phase2/`](logs/phase2/) — All eval run logs (JSON + markdown)
+- [`docs/phase2/blog.md`](docs/phase2/blog.md) — Phase 2 writeup and reflection
+- [`docs/phase2/lessons.md`](docs/phase2/lessons.md) — Lessons from the symbolic HL loop
+- [`docs/phase2/understanding/`](docs/phase2/understanding/) — Distilled analyses of pipeline behavior
+- [`logs/README.md`](logs/README.md) — Log lineage inventory and plotting rules
+- [`logs/phase2/`](logs/phase2/) — Phase 2 eval logs (JSON + markdown)
 
 ---
 
 ## Lessons Learned (Both Phases)
 
-330+ iterations produced 15 lessons, documented in full in **[`docs/phase2/lessons.md`](docs/phase2/lessons.md)**. Highlights:
+The full Phase 2 reflection is in **[`docs/phase2/blog.md`](docs/phase2/blog.md)** and **[`docs/phase2/lessons.md`](docs/phase2/lessons.md)**. Highlights:
 
-1. **Additive scoring creates sink classes** — school bus and banana score high on everything. Guards don't fix this; it's structural.
-2. **Pairwise reranking is the most impactful technique** (+3.4pp) — but has a hard ceiling since ~55% of errors have the true class beyond rank 3.
-3. **Gap-aware gating prevents reranking from causing errors** — 5.6% of errors were CAUSED by the reranking layer before gating was added.
-4. **Histogram prototype ratios beat raw scores** — `hist_A - hist_B` (d=1.3-2.2) is far more discriminative than `hist_A` alone (d~0.3).
-5. **Shape-defined classes hit a ceiling in color/texture systems** — teapot at 21% is fundamentally limited.
-6. **The biggest gains are architectural, not parametric** — top 3 structural changes (+4.8pp) outweigh all subsequent threshold tuning (~+2.75pp across 70+ iterations).
+1. **Fitting is surprisingly doable** — symbolic verify rules can push train accuracy very high.
+2. **Generalization is the hard part** — the best validation number comes from the smaller `base_rerank` system, not the full verify system.
+3. **Pairwise reranking transfers better than narrow verification rules** — it targets reusable confusion structures instead of isolated failures.
+4. **Global/coarse features hit a representation ceiling** — color coverage, edge density, texture stats, quadrant stats, and histogram prototypes do not substitute for learned local/part features.
+5. **The codebase is the model** — thresholds, constants, prototypes, rule conditions, logs, tests, and update scripts together form the learned system.
+6. **HL needs regularization and credit assignment** — future progress should reward reusable visual operators, held-out rule selection, patch-level attribution, and object-centered perception.
 
 ---
 
@@ -138,7 +142,7 @@ swap iff disc_margin > base_threshold + score_gap * gap_scale
 eval on train -> analyze confusion matrix -> hypothesize fix -> implement -> eval -> keep or revert -> repeat
 ```
 
-Each iteration tests one hypothesis. Regressions are reverted. The coding agent (Claude) maintains experiment logs, reasoning traces, and feature distribution analyses throughout.
+Each iteration tests one hypothesis. Regressions are reverted. Claude Code and Codex maintain experiment logs, reasoning traces, plots, and feature distribution analyses throughout.
 
 ---
 
@@ -233,8 +237,11 @@ hl-image-net/
 │   └── predict_image.py   # Classify a single image
 ├── data/phase2/           # Train/val/test splits (not in repo)
 ├── logs/
-│   ├── phase1/            # All eval logs (JSON + markdown), 330+ iterations
-│   └── session_reasoning.md  # Detailed reasoning log
+│   ├── README.md          # Log lineage inventory and plotting rules
+│   ├── log_inventory.csv  # Machine-readable audit inventory
+│   ├── phase1/            # Cleaned Phase 1 eval logs
+│   ├── phase2/            # Cleaned Phase 2 eval logs
+│   └── generalization/    # Generalization checks and summaries
 └── docs/
     ├── phase1/            # Exploratory setup, report, blog, plots
     ├── phase2/            # Main hand-built symbolic pipeline docs, understanding, reflections
@@ -260,11 +267,13 @@ python scripts/predict_image.py path/to/image.jpg
 ## Technical Details
 
 - **Language**: Python 3.11
-- **Dependencies**: OpenCV, NumPy, SciPy (no ML frameworks)
+- **Dependencies**: OpenCV, NumPy, SciPy, scikit-image, scikit-learn, NetworkX, Matplotlib
+- **Symbolic pipeline constraint**: no neural-network framework, no backpropagation, no learned embedding model
 - **Lines of code**: ~6400
-- **Phase 1**: 248 eval runs, 11 sessions
-- **Phase 2**: 80+ additional eval runs and counting
-- **Coding agent**: Claude (Anthropic)
+- **Eval log inventory**: tracked in [`logs/README.md`](logs/README.md) and [`logs/log_inventory.csv`](logs/log_inventory.csv)
+- **Phase 1**: 250 archived eval records, exploratory setup
+- **Phase 2**: 975 archived eval records, real 10-class symbolic pipeline
+- **Coding agents**: Claude Code and Codex
 
 ---
 

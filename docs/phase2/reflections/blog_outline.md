@@ -23,13 +23,13 @@ The experiment does not prove that symbolic image classification beats neural ne
 3. **Phase 2: Honest 10-Class Setup**
    - Train/val/test split.
    - Architecture: signatures, histogram blending, pairwise reranking, verify.
-   - Result: 70.0% train / 49.4% val at Session 20/21.
+   - Current reproducible results: `base_rerank` at 55.4% train / 51.9% val; `full` verify at 84.0% train / 50.5% val.
 
 4. **The Wall**
    - Cascade dynamics.
    - 70-80% revert rate.
    - Verify rules become memorized training corrections.
-   - 100% train endpoint drops to 41.35% val.
+   - Archived 100% train endpoint exists in logs, but exact code state is not currently reproducible.
 
 5. **Anycode As Diagnostic, Not The Main Story**
    - KNN memorizes immediately.
@@ -52,7 +52,7 @@ The experiment does not prove that symbolic image classification beats neural ne
 
 ## Claims To Avoid
 
-- Do not claim the 70% result came from trees.
+- Do not headline the superseded 70.0% train / 49.4% val Session 20/21 state as the current result.
 - Do not present the 100% train system as a generalizing classifier.
 - Do not say "no learned parameters" without caveats; thresholds and prototypes are learned/tuned artifacts.
 - Do not compare Phase 1 dev accuracy directly to Phase 2 validation accuracy.
