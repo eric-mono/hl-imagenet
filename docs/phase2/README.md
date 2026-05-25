@@ -5,6 +5,7 @@ Phase 2 is the main hand-built symbolic pipeline on 10 real Tiny ImageNet classe
 ## Files
 
 - [phase2_eda.md](phase2_eda.md) — Dataset and class statistics.
+- [blog.md](blog.md) — Phase 2 public writeup using the latest reproducible symbolic results.
 - [phase2_experiment_log.md](phase2_experiment_log.md) — Early chronological experiment notes.
 - [phase2_local_vision.md](phase2_local_vision.md) — Proposal to move from global statistics to local perception.
 - [lessons.md](lessons.md) — Lessons from the hand-built symbolic pipeline.
@@ -16,9 +17,15 @@ Phase 2 is the main hand-built symbolic pipeline on 10 real Tiny ImageNet classe
 
 ## Most Important Boundary
 
-The 70.0% train / 49.4% val result belongs here. It is the hand-built symbolic pipeline before the later anycode forest work. No decision trees are responsible for that 70% train result.
+The current reproducible Phase 2 symbolic results are:
 
-The later 100% train / 41.35% val endpoint is also Phase 2, but it should be treated as an overfitting artifact: verify waves memorized training corrections and harmed validation.
+| System | Train | Val | Reading |
+|---|---:|---:|---|
+| `base_rerank` | 55.4% | 51.9% | Best generalizing symbolic core |
+| `full` verify-rule system | 84.0% | 50.5% | Higher train, larger generalization gap |
+| archived historical endpoint | 100.0% train | not current ground truth | Reached in logs, exact code state not currently reproducible |
+
+The archived 100% train endpoint is also Phase 2, but it should be treated as historical evidence of executable memorization rather than the current reproducible artifact.
 
 ## Reflection Strategy
 

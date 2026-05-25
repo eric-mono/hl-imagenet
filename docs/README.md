@@ -14,14 +14,15 @@ The docs are organized by experiment lineage. The main story is the hand-built s
 | Track | Train | Val | Status |
 |---|---:|---:|---|
 | Phase 1 dev system | 86.1% dev | 51-54% held-out subset | Historical proof-of-loop |
-| Phase 2 symbolic pipeline, Session 20/21 | 70.0% | 49.4% | Main no-tree symbolic result: base scoring + rerank + in-pipeline verify |
-| Phase 2 archived full verify-wave endpoint | 100.0% | 41.35% | Historical Session 26 overfit endpoint, not the active restarted loop |
+| Phase 2 `base_rerank` symbolic core | 55.4% | 51.9% | Current reproducible best-generalizing symbolic system |
+| Phase 2 `full` verify-rule system | 84.0% | 50.5% | Current reproducible high-train symbolic system |
+| Phase 2 archived full verify-wave endpoint | 100.0% train | not current ground truth | Historical overfit endpoint, exact code state not currently reproducible |
 | Small CNN baseline | 76.0% | 71.8% | Learned-representation reference |
 
 ## Current Research Frame
 
-The central lesson is not that symbolic vision reaches high validation accuracy. It does not. A historical Session 26 endpoint did reach 100.0% train accuracy by stacking verify waves, but that was an overfit artifact recorded in the logs, not the current restarted loop state. The central lesson is that **train-only heuristic learning over code can memorize just like train-only parameter learning**.
+The central lesson is not that symbolic vision reaches high validation accuracy. It does not. The current reproducible symbolic core reaches 51.9% validation, while the current full verify system reaches 84.0% train but only 50.5% validation. A historical endpoint did reach 100.0% train accuracy by stacking verify waves, but that exact code state is not currently reproducible from `HEAD`. The central lesson is that **train-only heuristic learning over code can memorize just like train-only parameter learning**.
 
-For reporting, freeze two symbolic artifacts: the Session 20/21 no-tree symbolic pipeline at 70.0% train / 49.4% val, and the archived Session 26 verify-wave endpoint at 100.0% train / 41.35% val. The contrast between them is the main result.
+For reporting, use `base_rerank` at 55.4% train / 51.9% val as the best-generalizing symbolic core, `full` verify at 84.0% train / 50.5% val as the current high-train symbolic system, and the archived 100.0% train endpoint only as historical evidence of executable memorization.
 
 In this project, the codebase is the model, patches are actions, and evaluation accuracy is reward. When the reward is train accuracy, the agent eventually writes a memorizer made of thresholds and special cases. The next research step is a heuristic-learning loop with a generalization reward, explicit regularization, and representation-level feature invention.
