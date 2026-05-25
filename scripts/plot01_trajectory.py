@@ -121,7 +121,7 @@ def main():
 
     # CNN baseline reference
     ax.axhline(y=71.8, color='#888888', linestyle='-.', linewidth=1.2, alpha=0.5)
-    ax.text(train_dates[-1], 72.8, "CNN baseline val (71.8%)", fontsize=8, color='#888888',
+    ax.text(train_dates[-1], 72.8, "Simple CNN baseline val (71.8%)", fontsize=8, color='#888888',
             ha='right', va='bottom', fontstyle='italic')
 
     # 10% random baseline
