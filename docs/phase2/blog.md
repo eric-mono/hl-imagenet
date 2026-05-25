@@ -183,7 +183,7 @@ The code looks interpretable, but interpretability does not automatically imply 
 
 ![Pipeline ablation](plots/03_pipeline_ablation.png)
 
-*Figure 5. The ablation story is more informative than the single final number. Pairwise reranking is the useful transfer layer; the verify stages add train accuracy but do not form the highest-validation symbolic classifier.*
+*Figure 5. The ablation story is more informative than the single final number. Val accuracy peaks at +Local Verify (52.7%), then drops as more verify stages are added. The later stages push train from 62% to 84% while val stays flat or drops — the signature of executable memorization.*
 
 ---
 
@@ -589,10 +589,6 @@ Or more carefully:
 
 *Figure 8. The comparison to the small CNN is not meant as a leaderboard claim. It is a diagnostic: learned representation still gives a much stronger validation result than the current hand-built symbolic representation.*
 
-![Feature ceiling](plots/07_feature_ceiling.png)
-
-*Figure 9. Repeated feature and model-combination experiments suggest a ceiling for the current global/coarse feature set. The next gain likely needs better object-centered and local reusable operators, not another layer of narrow threshold patches.*
-
 ---
 
 ## Remaining Challenges
@@ -718,3 +714,15 @@ That is where Phase 2 leaves the project.
 The next phase should stop chasing train accuracy. It should build a generalization-aware heuristic-learning loop: held-out selection, patch regularization, better visual primitives, and credit assignment over code edits.
 
 The goal is not to prove that symbolic vision beats neural networks. The goal is to understand what happens when code itself becomes the trainable object.
+
+---
+
+## References
+
+Weng, J. (2026). *Learning Beyond Gradients*. Blog post. https://trinkle23897.github.io/learning-beyond-gradients/
+
+## Suggested Citation
+
+If you cite this project or blog post, please cite:
+
+Wang, X. (2026). *Heuristic Learning for Symbolic ImageNet-10*. Project blog. https://github.com/xisen-w/hl-imagenet
